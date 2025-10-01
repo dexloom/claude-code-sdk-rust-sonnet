@@ -1,0 +1,96 @@
+[package]
+name = "claude-agent-sdk"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75.0"
+authors = ["Anthropic"]
+license = "MIT"
+description = "Rust SDK for Claude Agent"
+repository = "https://github.com/anthropics/claude-agent-sdk-rust"
+keywords = ["claude", "ai", "sdk", "anthropic"]
+categories = ["api-bindings", "asynchronous"]
+
+[dependencies]
+# Async runtime
+tokio = { version = "1.40", features = ["full"] }
+tokio-stream = "0.1"
+futures = "0.3"
+async-trait = "0.1"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Error handling
+thiserror = "1.0"
+
+# Logging
+tracing = "0.1"
+
+# Utilities
+bytes = "1.7"
+which = "6.0"
+users = "0.11"
+uuid = { version = "1.10", features = ["v4"] }
+
+[dev-dependencies]
+tokio-test = "0.4"
+assert_matches = "1.5"
+tempfile = "3.12"
+criterion = { version = "0.5", features = ["async_tokio"] }
+
+[lib]
+name = "claude_agent_sdk"
+path = "src/lib.rs"
+
+[[example]]
+name = "quick_start"
+path = "examples/quick_start.rs"
+
+[[example]]
+name = "streaming_mode"
+path = "examples/streaming_mode.rs"
+
+[[example]]
+name = "hooks"
+path = "examples/hooks.rs"
+
+[[example]]
+name = "tool_permission_callback"
+path = "examples/tool_permission_callback.rs"
+
+[[example]]
+name = "system_prompt"
+path = "examples/system_prompt.rs"
+
+[[example]]
+name = "stderr_callback"
+path = "examples/stderr_callback.rs"
+
+[[example]]
+name = "agents"
+path = "examples/agents.rs"
+
+[[example]]
+name = "setting_sources"
+path = "examples/setting_sources.rs"
+
+[[example]]
+name = "partial_messages"
+path = "examples/partial_messages.rs"
+
+[[example]]
+name = "mcp_calculator"
+path = "examples/mcp_calculator.rs"
+
+[[example]]
+name = "api_demo"
+path = "examples/api_demo.rs"
+
+[[bench]]
+name = "sdk_benchmarks"
+harness = false
+
+[profile.release]
+opt-level = 3
+lto = true
