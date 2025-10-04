@@ -87,6 +87,14 @@ path = "examples/mcp_calculator.rs"
 name = "api_demo"
 path = "examples/api_demo.rs"
 
+[[example]]
+name = "mcp_demo"
+path = "examples/mcp_demo.rs"
+
+[[example]]
+name = "mcp_external"
+path = "examples/mcp_external.rs"
+
 [[bench]]
 name = "sdk_benchmarks"
 harness = false

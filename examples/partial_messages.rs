@@ -42,7 +42,7 @@ async fn main() {
             println!("Prompt: {}\n", prompt);
             println!("{}", "=".repeat(50));
 
-            if let Err(e) = client.query(prompt).await {
+            if let Err(e) = client.query(prompt.to_string()).await {
                 eprintln!("Query error: {}", e);
                 return;
             }
@@ -58,13 +58,17 @@ async fn main() {
                         message_count += 1;
 
                         match &message {
-                            Message::StreamEvent(event) => {
+                            Message::StreamEvent { event, .. } => {
                                 stream_event_count += 1;
                                 println!("\n📡 StreamEvent #{}", stream_event_count);
-                                println!("   Type: {}", event.event_type);
+
+                                // Show event type if available
+                                if let Some(event_type) = event.get("type").and_then(|t| t.as_str()) {
+                                    println!("   Type: {}", event_type);
+                                }
 
                                 // Show partial content if available
-                                if let Some(delta) = event.data.get("delta") {
+                                if let Some(delta) = event.get("delta") {
                                     if let Some(text) = delta.get("text").and_then(|t| t.as_str()) {
                                         partial_text.push_str(text);
                                         print!("{}", text);
@@ -73,38 +77,45 @@ async fn main() {
                                 }
 
                                 // Show thinking if available
-                                if let Some(thinking) = event.data.get("thinking").and_then(|t| t.as_str()) {
+                                if let Some(thinking) = event.get("thinking").and_then(|t| t.as_str()) {
                                     if !thinking.is_empty() {
                                         println!("\n💭 Thinking: {}", thinking);
                                     }
                                 }
                             }
-                            Message::Assistant(msg) => {
-                                if !msg.content.is_empty() {
-                                    println!("\n\n✅ Complete Assistant Message:");
-                                    println!("   {}", msg.content);
-                                }
+                            Message::Assistant { message, .. } => {
+                                println!("\n\n✅ Complete Assistant Message:");
 
-                                // Show thinking blocks
-                                for block in &msg.content_blocks {
-                                    if block.block_type == "thinking" {
-                                        if let Some(thinking) = block.text.as_ref() {
-                                            println!("\n💭 Complete Thinking:");
-                                            println!("   {}", thinking);
+                                // Show content blocks
+                                for block in &message.message.content {
+                                    match block {
+                                        claude_agent_sdk::ContentBlock::Text { text } => {
+                                            if !text.is_empty() {
+                                                println!("   Text: {}", text);
+                                            }
                                         }
+                                        claude_agent_sdk::ContentBlock::Thinking { thinking, .. } => {
+                                            if !thinking.is_empty() {
+                                                println!("\n💭 Complete Thinking:");
+                                                println!("   {}", thinking);
+                                            }
+                                        }
+                                        _ => {}
                                     }
                                 }
                             }
-                            Message::Result(msg) => {
-                                println!("\n\n🏁 Result: {:?}", msg.result_type);
+                            Message::Result { subtype, .. } => {
+                                println!("\n\n🏁 Result: {}", subtype);
                                 break;
                             }
-                            Message::User(msg) => {
-                                println!("\n👤 User: {}", msg.content);
+                            Message::User { message, .. } => {
+                                if let Some(content) = &message.message.content {
+                                    println!("\n👤 User: {:?}", content);
+                                }
                             }
-                            Message::System(msg) => {
-                                if msg.subtype != "init" {
-                                    println!("\n⚙️  System [{}]: {:?}", msg.subtype, msg.data);
+                            Message::System { subtype, data, .. } => {
+                                if subtype != "init" {
+                                    println!("\n⚙️  System [{}]: {:?}", subtype, data);
                                 }
                             }
                         }
@@ -121,6 +132,8 @@ async fn main() {
             println!("  Total messages: {}", message_count);
             println!("  Stream events: {}", stream_event_count);
             println!("  Partial text length: {} chars", partial_text.len());
+
+            drop(stream);
 
             if let Err(e) = client.disconnect().await {
                 eprintln!("Disconnect error: {}", e);

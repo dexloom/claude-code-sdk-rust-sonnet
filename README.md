@@ -193,13 +193,18 @@ The examples that connect to Claude require:
 2. **Authentication**: Set up your Anthropic API key
 3. **PATH**: Ensure `claude-code` is in your PATH
 
-### API Demonstration (No CLI Required)
+### Standalone Examples (No CLI Required)
 ```bash
-# Demonstrates SDK API without requiring Claude CLI
+# Demonstrates SDK API and configuration
 cargo run --example api_demo
+
+# Demonstrates in-process MCP server with direct tool calls
+cargo run --example mcp_demo
 ```
 
-This shows all configuration options, types, and patterns without needing authentication.
+These examples work immediately without any setup and demonstrate:
+- **api_demo**: All configuration options, types, and patterns
+- **mcp_demo**: In-process MCP server creation, tool execution, and error handling
 
 ### Live Examples (Require Claude CLI)
 ```bash
@@ -208,9 +213,20 @@ cargo run --example quick_start
 
 # Interactive multi-turn conversations
 cargo run --example streaming_mode
+
+# External MCP server integration (filesystem)
+cargo run --example mcp_external
 ```
 
-### Advanced Examples
+**Note:** The `mcp_external` example also requires:
+```bash
+npm install -g @modelcontextprotocol/server-filesystem
+```
+
+### Advanced Examples (Require Claude CLI)
+
+**Note:** These examples require Claude CLI to be installed and configured.
+
 ```bash
 # Hook system (PreToolUse, UserPromptSubmit)
 cargo run --example hooks
@@ -227,14 +243,20 @@ cargo run --example stderr_callback
 # Custom agent definitions
 cargo run --example agents
 
-# MCP calculator server (in-process tools)
-cargo run --example mcp_calculator
-
 # Setting sources control
 cargo run --example setting_sources
 
 # Partial message streaming
 cargo run --example partial_messages
+
+# In-process MCP server (API demonstration - limited CLI support)
+cargo run --example mcp_calculator
+```
+
+**Tip:** If examples hang or timeout, check that Claude CLI is properly installed:
+```bash
+which claude-code  # Should show the path
+claude-code --version  # Should show version
 ```
 
 ## Features Comparison with Python SDK
@@ -301,9 +323,11 @@ MIT
 
 ## MCP (Model Context Protocol) Support
 
-The SDK provides full MCP support for both external and in-process servers:
+The SDK provides MCP support in two ways:
 
-### External MCP Servers
+### External MCP Servers (Recommended for Claude CLI)
+
+External servers run as separate processes and are fully supported by Claude CLI:
 
 ```rust
 use std::collections::HashMap;
@@ -325,9 +349,16 @@ let options = ClaudeAgentOptions {
 };
 ```
 
-### In-Process MCP Servers
+**Example:** See `cargo run --example mcp_external`
 
-Create custom tools that run directly in your Rust application:
+### In-Process MCP Servers (For Direct Tool Calls)
+
+Create custom tools that run directly in your Rust application. These are useful for:
+- Standalone applications that don't use Claude CLI
+- Testing and development
+- Library integrations
+
+**Note:** In-process servers have limited support when used with Claude CLI subprocess transport.
 
 ```rust
 use claude_agent_sdk::{create_mcp_server, McpTool, ToolParameter};
@@ -357,9 +388,12 @@ let add_tool = McpTool::new("add", "Add two numbers", params, |args: Value| asyn
 
 // Create the server
 let calculator = create_mcp_server("calculator", "1.0.0", vec![add_tool]);
+
+// Call tools directly
+let result = calculator.call_tool("add", json!({"a": 5, "b": 3})).await?;
 ```
 
-See the [mcp_calculator example](examples/mcp_calculator.rs) for a complete implementation.
+**Example:** See `cargo run --example mcp_demo` for direct tool execution.
 
 ## Testing
 

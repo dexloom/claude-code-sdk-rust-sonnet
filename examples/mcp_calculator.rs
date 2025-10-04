@@ -268,6 +268,16 @@ async fn main() {
     println!("Calculator MCP Server Example");
     println!("{}", "=".repeat(50));
     println!();
+    println!("⚠️  WARNING: In-process MCP servers (SDK type) are not yet");
+    println!("   fully integrated with Claude CLI subprocess transport.");
+    println!();
+    println!("   This example demonstrates the API but may not work as expected.");
+    println!("   For working MCP integration, see:");
+    println!("     - cargo run --example mcp_demo (direct tool calls)");
+    println!("     - cargo run --example mcp_external (external MCP servers)");
+    println!();
+    println!("{}", "=".repeat(50));
+    println!();
 
     // Create the calculator server with all tools
     let calculator = create_mcp_server(
